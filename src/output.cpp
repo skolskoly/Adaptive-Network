@@ -44,7 +44,34 @@ OUTPUT * freeContext(OUTPUT * ctx)
 	return ctx;
 }
 
-int outputThread(void *data)
+int windowThread(void * data)
+{
+	// Yes SDL requires I launch a thread in a thread
+	// just to handle events. 
+	// IF YOU EVER WRITE AN API NEVER DO THI-
+	
+	SIMULATION * sim = (SIMULATION *) data;
+	sim->output = createContext(sim->width,sim->height,"Adaptive Network");
+	sim->output->gfx_thread = SDL_CreateThread(outputThread, "GraphicsThread", (void *) sim);
+	
+	while(sim->running)
+	{
+		for(SDL_Event e; SDL_PollEvent(&e) != 0;)
+		{
+			if(e.quit.type == SDL_QUIT)
+			{// Checks if the X button has been pressed.
+				sim->running = false;
+			}
+		}
+	}
+	
+	
+	
+	return 0;
+	
+}
+
+int outputThread(void * data)
 {
 	SIMULATION * sim = (SIMULATION *) data;
 	

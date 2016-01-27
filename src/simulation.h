@@ -23,6 +23,7 @@ struct SIMULATION
 {
 	CELL ** cells;
 	SIM_THREAD ** sim_threads;
+	SDL_Thread * window_thread;
 	OUTPUT * output;
 
 	UI32 n_cells;

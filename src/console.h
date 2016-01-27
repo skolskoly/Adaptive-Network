@@ -12,5 +12,4 @@ void wait(SIMULATION * sim);
 SIMULATION * kill(SIMULATION * sim);
 SIMULATION * run(SIMULATION * sim);
 
-
 #endif

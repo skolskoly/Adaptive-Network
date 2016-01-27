@@ -85,6 +85,7 @@ void wait(SIMULATION * sim)
 		for(UI32 i = 0 ; i < sim->n_threads; i++)
 			SDL_WaitThread(sim->sim_threads[i]->thread, NULL);
 		SDL_WaitThread(sim->output->gfx_thread, NULL);
+		SDL_WaitThread(sim->window_thread, NULL);
 	}
 
 }
@@ -113,7 +114,7 @@ SIMULATION * run(SIMULATION * sim)
 		
 	printf("\nThis a setup for creating a new simulation. Enter 0 for default values.\n\n");
 	printf("NOTE: Make sure to run the defaults once to know how much memory the simulation will use.\n");
-	printf("	There aren't any checks being done, so be careful not to allocate gigabytes of RAM.\n\n");
+	printf("There aren't any checks being done, so be careful not to allocate gigabytes of RAM.\n\n");
 	
 	
 	printf("Enter width (default 128): ");

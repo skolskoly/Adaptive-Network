@@ -205,14 +205,16 @@ UI32 getNeighbour(UI32 src_idx, UI16 val, SIMULATION * sim)
 	// Use a register value and derive an index
 	// that is one cell away from src_idx
 
-	int x = bitMask(val,0,8)%3 -1;
-	int y = bitMask(val,8,8)%3 -1;
-	y *= sim->width;
+	int src_x = src_idx % sim->width;
+	int src_y = src_idx / sim->width;
 	
-	if(src_idx + x + y >= sim->n_cells)
-		return src_idx;
+	int x = src_x + bitMask(val,0,8)%3 -1;
+	int y = src_y + bitMask(val,8,8)%3 -1;
 	
-	return (src_idx + x + y);
+	x = x % sim->width;
+	y = y % sim->height;
+
+	return x + y*sim->width;
 }
 
 int runCell(UI32 cel_idx, SIMULATION * sim)

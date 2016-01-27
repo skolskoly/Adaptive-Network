@@ -17,6 +17,7 @@ void update(OUTPUT * ctx);
 OUTPUT * createContext(UI32 w, UI32 h,const char * title);
 OUTPUT * freeContext(OUTPUT * ctx);
 
-int outputThread(void *data);
+int windowThread(void * data);
+int outputThread(void * data);
 
 #endif
