@@ -22,18 +22,17 @@ struct SIM_THREAD
 struct SIMULATION
 {
 	CELL ** cells;
+	
 	SIM_THREAD ** sim_threads;
 	SDL_Thread * window_thread;
 	OUTPUT * output;
-
+	
 	UI32 n_cells;
 	UI32 n_threads;
-	UI32 block_size;
 	
 	UI32 width, height;
 	
 	UI32 running;
-	float fps;
 
 };
 

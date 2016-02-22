@@ -13,25 +13,7 @@ UI8 bitMask(UI16 value, UI8 shift, UI8 bits)
 	return (value >> shift)&( (0x01 << bits) - 1);
 }
 
-UI16 * getMemoryPointer(CELL * c, UI32 index, SIMULATION * sim)
-{
-	// Walk through the cell's memory blocks
-	// and retrieve a UI16 pointer
-
-	BLOCK * tmp = c->blocks;
-	index %= c->n_blocks * sim->block_size;
-	
-	while( index >= sim->block_size )
-	{
-		tmp = tmp->next;
-		index -= sim->block_size;
-	}
-	
-	return &tmp->memory[index];
-	
-}
-
-void nextInstruction(CELL * c, SIMULATION * sim)
+void nextInstruction(CELL * c)
 {
 	// Increments the cells instruction pointer
 	// accounting for the fact that the pointer
@@ -39,11 +21,11 @@ void nextInstruction(CELL * c, SIMULATION * sim)
 	// when it goes out of bounds.
 
 	c->ip++;
-	UI32 index = c->ip - c->blocks->memory;
-	if( index >= sim->block_size)
+	UI32 index = c->ip - c->prog_block->memory;
+	if( index >= c->prog_block->size)
 	{
-		c->blocks = c->blocks->next;
-		c->ip = c->blocks->memory;
+		c->prog_block = c->prog_block->next;
+		c->ip = c->prog_block->memory;
 	}
 }
 
@@ -59,27 +41,12 @@ void fmtInstruction(CELL * c, UI8 * reg, UI8 * opcode)
 	*opcode = bitMask(*c->ip, 0, 4) % N_OPS;
 }
 
-void outputInstruction(UI16 * inst)
-{
-	const char * op;
-	switch(inst[4])
-	{
-		case ADI: op = "ADI"; break;
-		case ADD: op = "ADD"; break;
-		case JEQ: op = "JEQ"; break;
-		case MEM: op = "MEM"; break;
-		case BTW: op = "BTW"; break;
-		case SYS: op = "SYS"; break;
-		default:  op = "NUL"; break;
-	}
-	
-	printf("%s %i , %i , %i , %i\n", op, inst[0], inst[1], inst[2], inst[3]);
-}
-
 BLOCK * initBlock(UI32 block_size)
 {
 
 	BLOCK * block = (BLOCK *) malloc(sizeof(BLOCK));
+	block->next = NULL;
+	block->size = block_size;
 	block->memory = (UI16 *) malloc(sizeof(UI16)*block_size);
 	for(UI32 j = 0; j < block_size; j++)
 		block->memory[j] = rand();
@@ -93,20 +60,23 @@ CELL * initCell(UI32 block_size, UI32 n_blocks)
 	CELL * c = (CELL *) malloc(sizeof(CELL));
 	
 	{	// List Memory Allocation
-		c->blocks = initBlock(block_size);
-		BLOCK * tmp = c->blocks;
+		c->start = initBlock(block_size);
+		BLOCK * tmp = c->start;
 		for(UI32 i = 1; i < n_blocks; i++)
 		{
 			tmp->next = initBlock(block_size);;
 			tmp = tmp->next;
 		}
-		tmp->next = c->blocks;
+		tmp->next = c->start;
 	}
 	
 	{	// Initial Values
 		c->lock = false;
 		c->n_blocks = n_blocks;
-		c->ip = c->blocks->memory;
+		c->free_memory = 0;
+		c->ip = c->start->memory;
+		c->prog_block = c->start;
+		c->data_block = c->start;
 		for(UI32 i = 0; i < 8; i++) c->reg[i] = rand();
 		for(UI32 i = 0; i < 3; i++) c->color[i] = rand();
 	}
@@ -117,13 +87,13 @@ CELL * initCell(UI32 block_size, UI32 n_blocks)
 
 void freeCell(CELL * c)
 {
-	BLOCK * tmp = c->blocks; 
+	BLOCK * tmp = c->start; 
 	for(UI32 i = 0; i < c->n_blocks; i++)
 	{
 		tmp = tmp->next;
-		free(c->blocks->memory);
-		free(c->blocks);
-		c->blocks = tmp;
+		free(c->start->memory);
+		free(c->start);
+		c->start = tmp;
 	}
 	free(c);
 }
@@ -139,18 +109,23 @@ BLOCK * extractBlock(CELL * c, UI32 idx)
 	// block ahead of it
 
 	idx %= c->n_blocks;
-	BLOCK * block = c->blocks;
+	BLOCK * block = c->prog_block;
 	for(UI32 i = 0; i < idx; i++)
 		block = block->next;
 		
 	BLOCK * tmp = block;
 	block = block->next;
 	
-	if(block == c->blocks)
+	if(block == c->start)
+		c->start = c->start->next;
+	if(block == c->data_block)
+		c->data_block = c->data_block->next;
+	if(block == c->prog_block)
 	{
-		c->blocks = c->blocks->next;
-		c->ip = c->blocks->memory;
+		c->prog_block = c->prog_block->next;
+		c->ip = c->prog_block->memory;
 	}
+		
 	
 	tmp->next = block->next;
 	
@@ -169,13 +144,22 @@ void insertBlock(CELL * c, BLOCK * block, UI32 idx)
 		// links to itself to ensure the program loops
 	
 		block->next = block;
-		c->blocks = block;
+		c->start = block;
+		c->prog_block = block;
+		c->data_block = block;
 		c->ip = block->memory;
 	}
 	else
 	{
-		block->next = c->blocks->next;
-		c->blocks->next = block;
+		
+		idx %= c->n_blocks;
+		BLOCK * tmp = c->prog_block;
+		for(UI32 i = 0; i < idx; i++)
+			tmp = tmp->next;
+		
+		block->next = tmp->next;
+		tmp->next = block;
+		
 	}
 	
 	c->n_blocks++;
@@ -252,16 +236,21 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 		case JEQ:
 			if(c->reg[ rg_idx[0] ] == c->reg[ rg_idx[1] ])
 			{
-				UI32 new_idx = c->ip - c->blocks->memory;
-				new_idx += c->reg[ rg_idx[2] ] + rg_idx[3];
-				c->ip = getMemoryPointer(c, new_idx, sim);
+				for(UI32 i = 0; i < c->reg[ rg_idx[3] ] % c->n_blocks; i++)
+					c->prog_block = c->prog_block->next;
+				
+				if( c->reg[ rg_idx[3] ] >= c->n_blocks)
+					c->prog_block = c->start;
+				
+				UI32 new_idx = c->reg[ rg_idx[2] ] % c->prog_block->size;;
+				c->ip = ( c->prog_block->memory + new_idx ) ;
 			}
 		break;
 		
 		case MEM:
 		{
-			UI32 mem_idx = c->reg[ rg_idx[1] ] + rg_idx[2];
-			UI16 * memory = getMemoryPointer(c, mem_idx, sim);
+			UI32 mem_idx = (c->reg[ rg_idx[1] ] + rg_idx[2]) % c->data_block->size;
+			UI16 * memory = c->data_block->memory + mem_idx;
 			
 			switch(rg_idx[3] % N_M_OPS)
 			{
@@ -270,6 +259,12 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 				break;
 				case M_WRITE:
 					*memory = c->reg[ rg_idx[0] ]; 
+				break;
+				case M_NEXT:
+					c->data_block = c->data_block->next;
+				break;
+				case M_START:
+					c->data_block = c->start;
 				break;
 			}
 			
@@ -320,6 +315,20 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 					mutateColor(c, dst);
 										
 				}break;
+				case S_FRY:
+					UI32 dst_idx = getNeighbour(cel_idx, c->reg[0], sim);
+					CELL * dst = sim->cells[dst_idx];
+				
+					//*dst->ip = rand();
+				
+					
+					for(UI32 i = 0; i < dst->prog_block->size; i++)
+					{
+						dst->prog_block->memory[i] = rand();
+					}
+					
+					
+				break;
 			}
 		break;
 		
@@ -327,7 +336,7 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 		break;
 	}
 	
-	nextInstruction(c, sim);
+	nextInstruction(c);
 	
 	return 0;
 }

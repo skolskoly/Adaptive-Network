@@ -11,6 +11,7 @@ struct OUTPUT
 	SDL_Renderer * ren;
 	SDL_Surface * srf;
 	SDL_Thread * gfx_thread;
+	float fps;
 };
 
 void update(OUTPUT * ctx);

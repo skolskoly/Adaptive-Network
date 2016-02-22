@@ -21,6 +21,7 @@ OUTPUT * createContext(UI32 w, UI32 h, const char * title)
 	ctx->win = SDL_CreateWindow(title,x,y, w, h, SDL_WINDOW_SHOWN);
 	ctx->ren = SDL_CreateRenderer(ctx->win, -1, SDL_RENDERER_SOFTWARE);
 	ctx->tex = SDL_CreateTexture(ctx->ren, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, w, h); 
+	ctx->fps = 60.0;
 	
 	return ctx;
 }
@@ -104,7 +105,7 @@ int outputThread(void * data)
 		update(sim->output); // Update the display with the new pixel buffer
 		
 		ticks = SDL_GetTicks() - ticks;
-		if(ticks < 1000/sim->fps) SDL_Delay(1000/sim->fps - ticks);
+		if(ticks < 1000/sim->output->fps) SDL_Delay(1000/sim->output->fps - ticks);
 	}
 	return 0;
 }

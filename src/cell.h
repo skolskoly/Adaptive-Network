@@ -10,17 +10,25 @@ struct BLOCK
 {
 	UI16 * memory;
 	BLOCK * next;
+	UI32 size;
 };
 
 struct CELL
 {
-	BLOCK * blocks;
 	UI16 * ip;
+	
+	BLOCK * start;
+	BLOCK * prog_block;
+	BLOCK * data_block;
+	
 	UI32 n_blocks;
+	UI32 free_memory;
+	
 	UI16 reg[8];
 	UI8 color[3];
 	UI8 lock;
 };
+
 enum OPERATIONS
 {
 	ADI,
@@ -30,12 +38,14 @@ enum OPERATIONS
 	BTW,
 	SYS,
 	N_OPS
-
 };
+
 enum MEM_OPS
 {
 	M_READ,
 	M_WRITE,
+	M_NEXT,
+	M_START,
 	N_M_OPS
 };
 
@@ -55,13 +65,12 @@ enum SYS_OPS
 {
 	S_OUT,
 	S_SPLICE,
+	S_FRY,
 	N_S_OPS
 };
 
 CELL * initCell(UI32 block_size, UI32 n_blocks);
 int runCell(UI32 cel_idx, SIMULATION * sim);
 void freeCell(CELL * c);
-void outputInstruction(UI16 * inst);
-
 
 #endif

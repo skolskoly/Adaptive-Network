@@ -48,10 +48,8 @@ SIMULATION * initSimulation(UI32 width, UI32 height, UI32 block_size, UI32 n_blo
 	
 	{	// Initial simulation values
 		sim->running = true;
-		sim->block_size = block_size;
 		sim->n_cells = width * height;
 		sim->n_threads = n_threads;
-		sim->fps = 60.0;
 		sim->width = width;
 		sim->height = height;
 	}
