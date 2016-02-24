@@ -65,7 +65,6 @@ enum SYS_OPS
 {
 	S_OUT,
 	S_SPLICE,
-	S_FRY,
 	N_S_OPS
 };
 

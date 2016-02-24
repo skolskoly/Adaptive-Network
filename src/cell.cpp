@@ -304,31 +304,22 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 					//printf("REG:\t%i ,\t\n%i , \t\n%i , \t\n%i\n", c->reg[0],c->reg[1],c->reg[2],c->reg[3]);
 				break;
 				case S_SPLICE:
-				{
-					
-					UI32 dst_idx = getNeighbour(cel_idx, c->reg[0], sim);
-					CELL * dst = sim->cells[dst_idx];
-					
-					BLOCK * block = extractBlock(c, c->reg[1] );			
-					insertBlock(dst, block, 0);
-					
-					mutateColor(c, dst);
-										
-				}break;
-				case S_FRY:
-					UI32 dst_idx = getNeighbour(cel_idx, c->reg[0], sim);
-					CELL * dst = sim->cells[dst_idx];
-				
-					//*dst->ip = rand();
-				
-					
-					for(UI32 i = 0; i < dst->prog_block->size; i++)
 					{
-						dst->prog_block->memory[i] = rand();
+						
+						UI32 dst_idx = getNeighbour(cel_idx, c->reg[0], sim);
+						CELL * dst = sim->cells[dst_idx];
+						
+						BLOCK * block = extractBlock(c, c->reg[1] );			
+						insertBlock(dst, block, 0);
+						
+						mutateColor(c, dst);
+						
+						dst->prog_block = dst->prog_block->next;
+						dst->ip = dst->prog_block->memory;			
+											
 					}
-					
-					
 				break;
+
 			}
 		break;
 		
