@@ -46,6 +46,7 @@ enum MEM_OPS
 	M_WRITE,
 	M_NEXT,
 	M_START,
+	M_SET_IP,
 	N_M_OPS
 };
 
@@ -65,6 +66,8 @@ enum SYS_OPS
 {
 	S_OUT,
 	S_SPLICE,
+	S_FREE_MEM,
+	S_ALLOC_MEM,
 	N_S_OPS
 };
 

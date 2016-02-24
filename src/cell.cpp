@@ -236,14 +236,16 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 		case JEQ:
 			if(c->reg[ rg_idx[0] ] == c->reg[ rg_idx[1] ])
 			{
-				for(UI32 i = 0; i < c->reg[ rg_idx[3] ] % c->n_blocks; i++)
-					c->prog_block = c->prog_block->next;
 				
 				if( c->reg[ rg_idx[3] ] >= c->n_blocks)
 					c->prog_block = c->start;
+				else
+					for(UI32 i = 0; i < c->reg[ rg_idx[3] ]; i++)
+						c->prog_block = c->prog_block->next;
 				
 				UI32 new_idx = c->reg[ rg_idx[2] ] % c->prog_block->size;;
 				c->ip = ( c->prog_block->memory + new_idx ) ;
+				
 			}
 		break;
 		
@@ -257,14 +259,22 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 				case M_READ:
 					c->reg[ rg_idx[0] ] = *memory;
 				break;
+				
 				case M_WRITE:
 					*memory = c->reg[ rg_idx[0] ]; 
 				break;
+				
 				case M_NEXT:
 					c->data_block = c->data_block->next;
 				break;
+				
 				case M_START:
 					c->data_block = c->start;
+				break;
+				
+				case M_SET_IP:
+					c->prog_block = c->data_block;
+					c->ip = c->prog_block->memory;
 				break;
 			}
 			
@@ -276,21 +286,27 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 				case B_AND:
 					c->reg[ rg_idx[0] ] = c->reg[ rg_idx[1] ] & c->reg[ rg_idx[2] ];
 				break;
+				
 				case B_OR:
 					c->reg[ rg_idx[0] ] = c->reg[ rg_idx[1] ] | c->reg[ rg_idx[2] ];
 				break;
+				
 				case B_XOR:
 					c->reg[ rg_idx[0] ] = c->reg[ rg_idx[1] ] ^ c->reg[ rg_idx[2] ];
 				break;
+				
 				case B_NAND:
 					c->reg[ rg_idx[0] ] = ~(c->reg[ rg_idx[1] ] & c->reg[ rg_idx[2] ]);
 				break;
+				
 				case B_NOT:
 					c->reg[ rg_idx[0] ] = ~c->reg[ rg_idx[1] ];
 				break;
+				
 				case B_LSH:
 					c->reg[ rg_idx[0] ] = c->reg[ rg_idx[1] ] << c->reg[ rg_idx[2] ];
 				break;
+				
 				case B_RSH:
 					c->reg[ rg_idx[0] ] = c->reg[ rg_idx[1] ] >> c->reg[ rg_idx[2] ];
 				break;			
@@ -303,6 +319,7 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 				case S_OUT:
 					//printf("REG:\t%i ,\t\n%i , \t\n%i , \t\n%i\n", c->reg[0],c->reg[1],c->reg[2],c->reg[3]);
 				break;
+				
 				case S_SPLICE:
 					{
 						
@@ -319,7 +336,36 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 											
 					}
 				break;
-
+				
+				/*
+				case S_FREE_MEM:
+				{
+					
+					BLOCK * block = extractBlock(c, c->reg[0] );
+					c->free_memory += block->size;
+					free(block->memory);
+					free(block);
+				
+				}
+				break;
+				
+				case S_ALLOC_MEM:
+				{
+					
+					if(c->free_memory == 0) break;
+					UI16 amount = c->reg[0] % c->free_memory;
+					if( amount == 0) break;
+					
+					c->free_memory -= amount;
+					BLOCK * block = (BLOCK *) malloc(sizeof(BLOCK));
+					block->size = amount;
+					block->memory = (UI16 *) malloc(sizeof(UI16) * amount);
+					insertBlock(c, block, c->reg[1]);
+			
+				}
+				break;
+				*/
+				
 			}
 		break;
 		
