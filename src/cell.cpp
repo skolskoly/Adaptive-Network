@@ -71,6 +71,7 @@ CELL * initCell(UI32 block_size, UI32 n_blocks)
 	}
 	
 	{	// Initial Values
+		c->rank = 0;
 		c->lock = false;
 		c->n_blocks = n_blocks;
 		c->free_memory = 0;
@@ -203,6 +204,7 @@ UI32 getNeighbour(UI32 src_idx, UI16 val, SIMULATION * sim)
 
 int runCell(UI32 cel_idx, SIMULATION * sim)
 {
+	
 	CELL * c = sim->cells[cel_idx];
 	
 	if(c->n_blocks == 0) return 0; // Avoid processing an inactive cell
@@ -325,6 +327,8 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 						
 						UI32 dst_idx = getNeighbour(cel_idx, c->reg[0], sim);
 						CELL * dst = sim->cells[dst_idx];
+
+						if(c-rank < dst->rank) break;
 						
 						BLOCK * block = extractBlock(c, c->reg[1] );			
 						insertBlock(dst, block, 0);
@@ -361,10 +365,64 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 					block->size = amount;
 					block->memory = (UI16 *) malloc(sizeof(UI16) * amount);
 					insertBlock(c, block, c->reg[1]);
-			
+				
 				}
 				break;
 				*/
+				
+				case S_GET_PROBLEM:
+				{
+					UI32 start = c->reg[0];
+					UI32 length = c->reg[1];
+					UI32 offset = c->reg[2];
+					
+					UI32 q_len = sim->query->q_len;
+					UI32 m_len = c->data_block->size;
+					
+					UI8 * problem = sim->query->problem;
+					UI8 * memory = c->data_block->memory;
+					
+					offset %= q_len;
+					start %= m_len;
+					
+					length %= q_len - offset;			
+					length %= m_len - start;
+					
+					for(int i = 0; i < length; i++)
+						memory[ i + start ] = problem[ i + offset ];		
+					
+				}
+				break;
+				
+				case S_GIVE_SOLUTION:
+				{
+					bool correct = true;
+					
+					UI32 start = c->reg[0];
+					
+					UI32 s_len = sim->query->s_len;
+					UI32 m_len = c->data_block->size;
+					
+					UI8 * solution = sim->query->solution;
+					UI8 * memory = c->data_block->memory;
+					
+					start %= m_len;
+
+					if(m_len - start < s_len)
+						correct = false;
+					
+					for(int i = 0; i < s_len && correct; i++)
+						if(memory[ i + start ] != solution[ i ])
+							correct = false;
+					
+					if(correct)
+					{
+						updateQuery(sim->query);
+						c->rank = sim->query->count;
+					}
+					
+				}
+				break;
 				
 			}
 		break;
@@ -376,4 +434,5 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 	nextInstruction(c);
 	
 	return 0;
+	
 }

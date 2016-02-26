@@ -24,6 +24,8 @@ struct CELL
 	UI32 n_blocks;
 	UI32 free_memory;
 	
+	UI32 rank;
+	
 	UI16 reg[8];
 	UI8 color[3];
 	UI8 lock;
@@ -68,6 +70,8 @@ enum SYS_OPS
 	S_SPLICE,
 	S_FREE_MEM,
 	S_ALLOC_MEM,
+	S_GET_PROBLEM,
+	S_GIVE_SOLUTION,
 	N_S_OPS
 };
 

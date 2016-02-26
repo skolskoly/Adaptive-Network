@@ -3,6 +3,7 @@
 #include "cell.h"
 #include "output.h"
 #include "macros.h"
+#include "query.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,6 +53,7 @@ SIMULATION * initSimulation(UI32 width, UI32 height, UI32 block_size, UI32 n_blo
 		sim->n_threads = n_threads;
 		sim->width = width;
 		sim->height = height;
+		sim->query = initQuery();
 	}
 		
 	{	// Cell initialization
@@ -96,5 +98,7 @@ void freeSimulation(SIMULATION * sim)
 	{
 		free(sim->sim_threads[i]);
 	}
+	freeQuery(sim->query);
 	freeContext(sim->output);
 }
+

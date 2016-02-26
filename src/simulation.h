@@ -6,6 +6,7 @@
 #include "cell.h"
 #include "output.h"
 #include "macros.h"
+#include "query.h"
 
 struct SIMULATION;
 
@@ -26,10 +27,11 @@ struct SIMULATION
 	SIM_THREAD ** sim_threads;
 	SDL_Thread * window_thread;
 	OUTPUT * output;
+	QUERY * query;
 	
 	UI32 n_cells;
 	UI32 n_threads;
-	
+		
 	UI32 width, height;
 	
 	UI32 running;
