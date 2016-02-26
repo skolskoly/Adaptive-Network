@@ -318,9 +318,6 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 		case SYS:
 			switch( rg_idx[0] % N_S_OPS)
 			{
-				case S_OUT:
-					//printf("REG:\t%i ,\t\n%i , \t\n%i , \t\n%i\n", c->reg[0],c->reg[1],c->reg[2],c->reg[3]);
-				break;
 				
 				case S_SPLICE:
 					{
@@ -328,7 +325,7 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 						UI32 dst_idx = getNeighbour(cel_idx, c->reg[0], sim);
 						CELL * dst = sim->cells[dst_idx];
 
-						//if(c->rank < dst->rank) break;
+						if(c->rank < dst->rank) break;
 						
 						BLOCK * block = extractBlock(c, c->reg[1] );			
 						insertBlock(dst, block, 0);
@@ -337,7 +334,9 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 						
 						dst->prog_block = dst->prog_block->next;
 						dst->ip = dst->prog_block->memory;			
-											
+						
+						dst->rank = c->rank;
+						
 					}
 				break;
 				
@@ -419,6 +418,7 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 					
 					if(correct)
 					{
+						//printf("solution found - new size: %i\n", sim->query->p_len);
 						updateQuery(sim->query);
 						c->rank = sim->query->count;
 					}

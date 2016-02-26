@@ -22,7 +22,7 @@ LSDL= -LC:\mingw_dev_lib\lib -lmingw32 -lSDL2main -lSDL2
 CC=g++
 CFLAGS= $(CSDL) -std=c++11 -Wall -c -g
 LDFLAGS= $(LSDL)
-SOURCES= src/main.cpp src/output.cpp src/cell.cpp src/simulation.cpp src/console.cpp src/macros.h
+SOURCES= src/main.cpp src/output.cpp src/cell.cpp src/simulation.cpp src/console.cpp src/query.cpp src/macros.h
 OBJECTS=$(patsubst src/%.cpp,obj/%.o,$(SOURCES)) 
 EXECUTABLE= main
 
