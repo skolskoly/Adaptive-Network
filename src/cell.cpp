@@ -328,7 +328,7 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 						UI32 dst_idx = getNeighbour(cel_idx, c->reg[0], sim);
 						CELL * dst = sim->cells[dst_idx];
 
-						if(c-rank < dst->rank) break;
+						//if(c->rank < dst->rank) break;
 						
 						BLOCK * block = extractBlock(c, c->reg[1] );			
 						insertBlock(dst, block, 0);
@@ -370,25 +370,27 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 				break;
 				*/
 				
+				
+				
 				case S_GET_PROBLEM:
 				{
 					UI32 start = c->reg[0];
 					UI32 length = c->reg[1];
 					UI32 offset = c->reg[2];
 					
-					UI32 q_len = sim->query->q_len;
+					UI32 p_len = sim->query->p_len;
 					UI32 m_len = c->data_block->size;
 					
 					UI8 * problem = sim->query->problem;
-					UI8 * memory = c->data_block->memory;
+					UI16 * memory = c->data_block->memory;
 					
-					offset %= q_len;
+					offset %= p_len;
 					start %= m_len;
 					
-					length %= q_len - offset;			
+					length %= p_len - offset;			
 					length %= m_len - start;
 					
-					for(int i = 0; i < length; i++)
+					for( UI32 i = 0; i < length; i++)
 						memory[ i + start ] = problem[ i + offset ];		
 					
 				}
@@ -404,14 +406,14 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 					UI32 m_len = c->data_block->size;
 					
 					UI8 * solution = sim->query->solution;
-					UI8 * memory = c->data_block->memory;
+					UI16 * memory = c->data_block->memory;
 					
 					start %= m_len;
 
 					if(m_len - start < s_len)
 						correct = false;
 					
-					for(int i = 0; i < s_len && correct; i++)
+					for(UI32 i = 0; i < s_len && correct; i++)
 						if(memory[ i + start ] != solution[ i ])
 							correct = false;
 					
@@ -423,6 +425,8 @@ int runCell(UI32 cel_idx, SIMULATION * sim)
 					
 				}
 				break;
+			
+				
 				
 			}
 		break;

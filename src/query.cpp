@@ -8,12 +8,14 @@ QUERY * initQuery()
 {
 
 	QUERY * query = (QUERY *) malloc( sizeof(QUERY) );
-	query->p_len = 0;
+	query->p_len = 1;
 	query->s_len = 1;
-	
+		
 	updateQuery(query);
-	
+		
 	query->count = 0;
+	
+	return query;
 	
 }
 
@@ -31,7 +33,7 @@ void freeQuery(QUERY * query)
 void generateProblem(QUERY * query)
 {
 
-	for(int i = 0; i < query->q_size; i++)
+	for(UI32 i = 0; i < query->p_len; i++)
 		query->problem[i] = rand();
 	
 }
@@ -40,25 +42,28 @@ void generateSolution(QUERY * query)
 {
 
 	UI32 sum = 0;
-	for(int i = 0; i < query->p_len; i++)
+	for(UI32 i = 0; i < query->p_len; i++)
 		sum += query->problem[i];
 	
-	*query->answer = sum / len;
+	*query->solution = sum / query->p_len;
 
 }
 
 void updateQuery(QUERY * query)
 {
 	
-	query->count++;
-	query->p_len++;
-	
 	if(query->problem) 
 		free(query->problem);
+	if(query->solution) 
+		free(query->solution);
 	
-	query->problem = malloc(sizeof(char) * p_len);
+	query->problem = (UI8 *) malloc(sizeof( UI8 ) * query->p_len);
+	query->solution = (UI8 *) malloc(sizeof( UI8 ) * query->s_len);
 	
 	generateProblem(query);
 	generateSolution(query);
-		
+	
+	query->count++;
+	query->p_len++;
+	
 }
